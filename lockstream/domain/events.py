@@ -1,3 +1,4 @@
+# typed domain events + the factory that builds and payload-validates them from raw records
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any

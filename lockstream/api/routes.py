@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response
 
 from ..application.service import IngestOutcome, LockStreamService
 from ..domain.errors import DomainRuleViolation, PayloadValidationError
@@ -14,18 +14,18 @@ def ingest_event(event: EventIn, service: LockStreamService = Depends(get_servic
     try:
         outcome = service.ingest(event.to_record())
     except PayloadValidationError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
+        raise HTTPException(422, str(exc)) from exc
     except DomainRuleViolation as exc:
-        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
-    code = status.HTTP_200_OK if outcome is IngestOutcome.DUPLICATE else status.HTTP_202_ACCEPTED
-    return Response(status_code=code)
+        raise HTTPException(409, str(exc)) from exc
+    # status-code only, no body - the spec defines no response schema for /events
+    return Response(status_code=200 if outcome is IngestOutcome.DUPLICATE else 202)
 
 
 @router.get("/lockers/{locker_id}", response_model=LockerSummaryOut)
 def get_locker(locker_id: str, service: LockStreamService = Depends(get_service)) -> LockerSummaryOut:
     summary = service.locker_summary(locker_id)
     if summary is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown locker {locker_id}")
+        raise HTTPException(404, f"unknown locker {locker_id}")
     return LockerSummaryOut(**summary)
 
 
@@ -40,7 +40,7 @@ def get_compartment(
 ) -> CompartmentStatusOut:
     view = service.compartment_status(locker_id, compartment_id)
     if view is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown compartment {compartment_id}")
+        raise HTTPException(404, f"unknown compartment {compartment_id}")
     return CompartmentStatusOut(**view)
 
 
@@ -51,5 +51,5 @@ def get_reservation(
 ) -> ReservationStatusOut:
     view = service.reservation_status(reservation_id)
     if view is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"unknown reservation {reservation_id}")
+        raise HTTPException(404, f"unknown reservation {reservation_id}")
     return ReservationStatusOut(**view)

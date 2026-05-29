@@ -1,3 +1,4 @@
+# enums + the in-memory aggregates the projection builds and queries
 from dataclasses import dataclass, field
 from enum import Enum
 

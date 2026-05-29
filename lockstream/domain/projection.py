@@ -1,3 +1,4 @@
+# the read model: apply events -> indexed in-memory state, queries, and a deterministic state_hash
 import hashlib
 import json
 import logging
