@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lockstream"
+version = "1.0.0"
+description = "Event-sourced service for tracking parcel locker state"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "httpx",
+    "pyyaml",
+    "jsonschema",
+]
+
+[tool.setuptools.packages.find]
+include = ["lockstream*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

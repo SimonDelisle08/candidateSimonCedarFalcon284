@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  title: LockStream API
+  version: 1.0.0
+paths:
+  /events:
+    post:
+      summary: Ingest a domain event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '202': { description: Event accepted }
+        '200': { description: Duplicate event (idempotent) }
+        '409': { description: Domain rule violation }
+        '422': { description: Validation error }
+
+  /lockers/{locker_id}:
+    get:
+      summary: Get locker summary
+      parameters:
+        - name: locker_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Locker summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LockerSummary'
+
+  /lockers/{locker_id}/compartments/{compartment_id}:
+    get:
+      summary: Get compartment status
+      parameters:
+        - name: locker_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: compartment_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Compartment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompartmentStatus'
+
+  /reservations/{reservation_id}:
+    get:
+      summary: Get reservation status
+      parameters:
+        - name: reservation_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Reservation status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationStatus'
+
+components:
+  schemas:
+    Event:
+      type: object
+      required: [event_id, occurred_at, locker_id, type, payload]
+      properties:
+        event_id: { type: string, format: uuid }
+        occurred_at: { type: string, format: date-time }
+        locker_id: { type: string }
+        type:
+          type: string
+          enum:
+            - CompartmentRegistered
+            - ReservationCreated
+            - ParcelDeposited
+            - ParcelPickedUp
+            - ReservationExpired
+            - FaultReported
+            - FaultCleared
+        payload:
+          type: object
+          additionalProperties: true
+
+    LockerSummary:
+      type: object
+      required: [locker_id, compartments, active_reservations, degraded_compartments, state_hash]
+      properties:
+        locker_id: { type: string }
+        compartments: { type: integer }
+        active_reservations: { type: integer }
+        degraded_compartments: { type: integer }
+        state_hash: { type: string }
+
+    CompartmentStatus:
+      type: object
+      required: [compartment_id, degraded, active_reservation]
+      properties:
+        compartment_id: { type: string }
+        degraded: { type: boolean }
+        active_reservation: { type: string, nullable: true }
+
+    ReservationStatus:
+      type: object
+      required: [reservation_id, status]
+      properties:
+        reservation_id: { type: string }
+        status:
+          type: string
+          enum: [CREATED, DEPOSITED, PICKED_UP, EXPIRED]
